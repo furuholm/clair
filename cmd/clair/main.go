@@ -34,6 +34,7 @@ import (
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/grafeas"
 	"github.com/coreos/clair/pkg/formatter"
 	"github.com/coreos/clair/pkg/stopper"
 	"github.com/coreos/clair/pkg/strutil"
@@ -131,6 +132,8 @@ func Boot(config *Config) {
 	rand.Seed(time.Now().UnixNano())
 	st := stopper.NewStopper()
 
+	g := grafeas.NewGrafeas(config.Grafeas)
+
 	// Open database
 	db, err := database.Open(config.Database)
 	if err != nil {
@@ -150,7 +153,7 @@ func Boot(config *Config) {
 
 	// Start updater
 	st.Begin()
-	go clair.RunUpdater(config.Updater, db, st)
+	go clair.RunUpdater(config.Updater, db, st, g)
 
 	// Wait for interruption and shutdown gracefully.
 	waitForSignals(syscall.SIGINT, syscall.SIGTERM)
